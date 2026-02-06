@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Dragon Force Map Tool" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+  <title>Dragon Force Map Tool</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { margin: 0; color:#e5e7eb; min-height:100vh; background:#0b1020 url('Topografica.jpg') center/cover no-repeat fixed; position: relative; }
+    body::before { content:''; position: fixed; inset: 0; background: rgba(11,16,32,.78); pointer-events:none; z-index:0; }
+    header, main { position: relative; z-index: 1; }
+
+    header { padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.10); position: relative; background: rgba(11,16,32,.94); backdrop-filter: blur(10px); }
+    .sub { margin-top:6px; font-size:12px; color:#9ca3af; line-height: 1.35; }
+    main { padding: 14px 16px 28px; max-width: 720px; margin: 0 auto; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 14px; }
+    button.tab { border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07); color:#e5e7eb; padding: 12px; border-radius: 14px; font-weight: 800; }
+    button.tab.active { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.25); }
+    .card { border:1px solid rgba(255,255,255,.14); background: rgba(8, 12, 24, 0.93); backdrop-filter: blur(8px); border-radius: 20px; padding: 16px; box-shadow: 0 12px 28px rgba(0,0,0,.38); }
+    .stack { display: grid; gap: 10px; }
+    label { display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px; }
+    input, select {
+      width:100%; box-sizing:border-box;
+      padding: 12px 12px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.28); color:#e5e7eb; outline:none;
+    }
+    input::placeholder { color:#6b7280; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 4px; }
+    .btn { border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.12); color:#fff; padding: 11px 12px; border-radius: 14px; font-weight: 900; }
+    .btn.secondary { background: rgba(0,0,0,.25); }
+    .out { margin-top: 10px; padding: 12px; border-radius: 14px; background: rgba(0,0,0,.40); border: 1px dashed rgba(255,255,255,.18); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; white-space: pre-wrap; }
+    .small { font-size: 12px; color:#9ca3af; line-height: 1.35; }
+    .warn { font-size: 12px; color:#fbbf24; line-height: 1.35; }
+
+    /* --- Dragon Force polish --- */
+    header { text-align: center; }
+    h1 {
+      margin: 6px 0 8px;
+      font-size: 30px;
+      font-weight: 950;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .sub { text-align: center; }
+    .tabs { margin-top: 14px; }
+    button.tab { transition: transform .12s ease, background .18s ease, border-color .18s ease; }
+    button.tab:active { transform: scale(0.98); }
+    button.tab.active { transform: translateY(-1px); }
+        .fadein { animation: fadeIn .18s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .footerLogo { text-align:center; margin-top: 22px; padding-bottom: 8px; }
+    .footerLogo img {
+      width: 280px;
+      max-width: 85%;
+      height: auto;
+      filter: drop-shadow(0 0 12px rgba(255, 215, 0, .22)) drop-shadow(0 0 24px rgba(255, 215, 0, .12));
+      opacity: .98;
+    }
+
+  </style>
+</head>
+<body>
+<header>
+  <h1>Dragon Force Map Tool</h1>
+  <div class="sub">
+    Mobile verticale. Scala (1:n) e distanza tra coordinate (m e cm).<br>
+    Nota: Roma40/ED50 → WGS84 è approssimativo (no griglie).
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="scale">Scala</button>
+    <button class="tab" data-tab="distance">Distanza</button>
+  </div>
+</header>
+
+<main>
+
+    <!-- SCALE -->
+  <section id="scale" class="card">
+    <div class="stack">
+      <div>
+        <label>Scala (1:n)</label>
+        <input id="scaleN" inputmode="numeric" placeholder="5000" />
+        <div class="small">Esempio: se sulla carta c’è scritto <span class="mono">1:5000</span> inserisci <span class="mono">5000</span></div>
+      </div>
+
+      <div>
+        <label>Unità di visualizzazione</label>
+        <select id="scaleUnit">
+          <option value="mm">mm</option>
+          <option value="cm" selected>cm</option>
+          <option value="m">m</option>
+          <option value="km">Km</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnScaleCalc">Calcola</button>
+        <button class="btn secondary" id="btnScaleClear">Pulisci</button>
+      </div>
+
+      <div class="out">
+        <div class="small">Output</div>
+        <div id="scaleOut" class="mono"></div>
+      </div>
+      <div id="scaleErr" class="warn"></div>
+
+      <div class="small">
+        Calcoli mostrati:
+        <span class="mono">1 cm sulla mappa</span> → distanza reale, e
+        <span class="mono">1 km reale</span> → quanto misura sulla mappa.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- DISTANCE -->
+  <section id="distance" class="card" style="display:none; margin-top:14px;">
+    <div class="stack">
+      <div>
+        <label>Datum / Sistema coordinate</label>
+        <select id="datum">
+          <option value="WGS84" selected>WGS84 (GPS) – EPSG:4326</option>
+          <option value="ROMA40">Roma1940 / Monte Mario (Roma40) – EPSG:4265 (approx)</option>
+          <option value="ED50">ED50 – EPSG:4230 (approx)</option>
+          <option value="ETRS89">ETRS89 – EPSG:4258 (≈ WGS84)</option>
+          <option value="RDN2008">RDN2008 / IGM95 (≈ WGS84)</option>
+        </select>
+      </div>
+
+      <div class="small">
+        Inserisci lat/lon in <b>gradi decimali</b> (es: 43.8812 / 10.7729).<br>
+        Se scegli Roma40 o ED50: conversione interna a WGS84 per calcolare distanza (approssimata).
+      </div>
+
+      <div>
+        <label>Punto A – Lat</label>
+        <input id="aLat" inputmode="decimal" placeholder="43.8812" />
+      </div>
+      <div>
+        <label>Punto A – Lon</label>
+        <input id="aLon" inputmode="decimal" placeholder="10.7729" />
+      </div>
+
+      <div>
+        <label>Punto B – Lat</label>
+        <input id="bLat" inputmode="decimal" placeholder="43.9000" />
+      </div>
+      <div>
+        <label>Punto B – Lon</label>
+        <input id="bLon" inputmode="decimal" placeholder="10.8000" />
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnDist">Calcola</button>
+        <button class="btn secondary" id="btnDistClear">Pulisci</button>
+      </div>
+
+      <div class="out">
+        <div class="small">Output</div>
+        <div id="distOut" class="mono"></div>
+      </div>
+      <div id="distErr" class="warn"></div>
+
+      <div class="small">
+        Parametri usati:
+        Monte Mario→WGS84 (EPSG:1660, 7-parametri) e ED50→WGS84 (EPSG:1133, traslazioni).  
+      </div>
+    </div>
+  </section>
+
+  <div class="small" style="margin-top:16px; color:#94a3b8;">
+    iPhone: Safari → Condividi → “Aggiungi alla schermata Home”.  
+    Android: Chrome → ⋮ → “Aggiungi a schermata Home”.
+  </div>
+
+  <div class="footerLogo" aria-hidden="true">
+    <img src="logo.png" alt="Dragon Force" />
+  </div>
+
+</main>
+
+<script>
+  // ---------- UI ----------
+  const $ = (id) => document.getElementById(id);
+  const tabs = document.querySelectorAll("button.tab");
+
+  function showPanel(idToShow) {
+    ["scale","distance"].forEach(id => {
+      const el = $(id);
+      if (id === idToShow) {
+        el.style.display = "block";
+        // restart animation
+        el.classList.remove("fadein");
+        void el.offsetWidth;
+        el.classList.add("fadein");
+      } else {
+        el.style.display = "none";
+      }
+    });
+  }
+
+  tabs.forEach(btn => btn.addEventListener("click", () => {
+    tabs.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    showPanel(btn.dataset.tab);
+  }));
+const setErr = (id, msg="") => { $(id).textContent = msg; };
+  const num = (v) => {
+    if (typeof v !== "string") return NaN;
+    const x = v.trim().replace(",", ".");
+    return x === "" ? NaN : Number(x);
+  };
+
+    // ---------- SCALE ----------
+  function fromMetersToUnit(meters, unit) {
+    if (unit === "mm") return meters * 1000;
+    if (unit === "cm") return meters * 100;
+    if (unit === "m") return meters;
+    if (unit === "km") return meters / 1000;
+    return meters;
+  }
+
+  $("btnScaleCalc").addEventListener("click", () => {
+    setErr("scaleErr");
+    $("scaleOut").textContent = "";
+
+    const n = num($("scaleN").value);
+    const unit = $("scaleUnit").value;
+
+    if (!Number.isFinite(n) || n <= 0) {
+      setErr("scaleErr", "Scala non valida: inserisci il valore n di 1:n (es: 5000).");
+      return;
+    }
+
+    // 1 cm on map -> real world
+    const realMeters_for_1cm = (n * 0.01); // n cm = n*0.01 m
+    const realInUnit = fromMetersToUnit(realMeters_for_1cm, unit);
+
+    // 1 km real -> map length
+    const mapMeters_for_1km = 1000 / n; // because map : real = 1:n
+    const mapInUnit = fromMetersToUnit(mapMeters_for_1km, unit);
+
+    const unitLabel = unit === "km" ? "Km" : unit;
+
+    $("scaleOut").textContent =
+      `Scala: 1:${Math.round(n)}
+
+` +
+      `• 1 cm sulla mappa = ${realInUnit.toFixed(2)} ${unitLabel} reali
+` +
+      `• 1 km reale = ${mapInUnit.toFixed(2)} ${unitLabel} sulla mappa`;
+  });
+
+  $("btnScaleClear").addEventListener("click", () => {
+    ["scaleN"].forEach(id => $(id).value = "");
+    $("scaleOut").textContent = "";
+    setErr("scaleErr");
+  });
+
+
+  // ---------- GEO / DATUM TRANSFORMS (approx) ----------
+  // Ellipsoids:
+  const ELL = {
+    WGS84: { a: 6378137.0, invf: 298.257223563 },
+    INTL1924: { a: 6378388.0, invf: 297.0 } // International 1924 (Hayford)
+  };
+
+  function toRad(d){ return d * Math.PI / 180; }
+  function toDeg(r){ return r * 180 / Math.PI; }
+
+  function geodeticToECEF(latDeg, lonDeg, h, ell) {
+    const a = ell.a;
+    const f = 1 / ell.invf;
+    const e2 = 2*f - f*f;
+
+    const lat = toRad(latDeg);
+    const lon = toRad(lonDeg);
+
+    const sinLat = Math.sin(lat);
+    const cosLat = Math.cos(lat);
+    const sinLon = Math.sin(lon);
+    const cosLon = Math.cos(lon);
+
+    const N = a / Math.sqrt(1 - e2 * sinLat*sinLat);
+
+    const x = (N + h) * cosLat * cosLon;
+    const y = (N + h) * cosLat * sinLon;
+    const z = (N*(1 - e2) + h) * sinLat;
+
+    return {x,y,z};
+  }
+
+  function ecefToGeodetic(x, y, z, ell) {
+    // Iterative (Bowring-ish)
+    const a = ell.a;
+    const f = 1 / ell.invf;
+    const e2 = 2*f - f*f;
+    const b = a * (1 - f);
+
+    const p = Math.sqrt(x*x + y*y);
+    const lon = Math.atan2(y, x);
+
+    let lat = Math.atan2(z, p * (1 - e2));
+    for (let i=0; i<7; i++) {
+      const sinLat = Math.sin(lat);
+      const N = a / Math.sqrt(1 - e2*sinLat*sinLat);
+      const h = p/Math.cos(lat) - N;
+      lat = Math.atan2(z, p * (1 - e2*(N/(N+h))));
+    }
+
+    const sinLat = Math.sin(lat);
+    const N = a / Math.sqrt(1 - e2*sinLat*sinLat);
+    const h = p/Math.cos(lat) - N;
+
+    return { latDeg: toDeg(lat), lonDeg: toDeg(lon), h };
+  }
+
+  // Helmert (Position Vector convention) like PROJ +proj=helmert (EPSG 9606)
+  // x,y,z in meters; rx,ry,rz in arc-seconds; s in ppm
+  function helmertPosVec(p, params) {
+    const {x,y,z} = p;
+    const dx = params.dx, dy = params.dy, dz = params.dz;
+    const rx = params.rx * (Math.PI / (180*3600)); // arcsec -> rad
+    const ry = params.ry * (Math.PI / (180*3600));
+    const rz = params.rz * (Math.PI / (180*3600));
+    const m = params.ds * 1e-6; // ppm -> dimensionless
+
+    // Position Vector:
+    // X2 = dx + (1+m)*X1 - rz*Y1 + ry*Z1
+    // Y2 = dy + rz*X1 + (1+m)*Y1 - rx*Z1
+    // Z2 = dz - ry*X1 + rx*Y1 + (1+m)*Z1
+    return {
+      x: dx + (1+m)*x - rz*y + ry*z,
+      y: dy + rz*x + (1+m)*y - rx*z,
+      z: dz - ry*x + rx*y + (1+m)*z
+    };
+  }
+
+  // Datum -> WGS84 (approx)
+  function toWGS84(lat, lon, datum) {
+    if (datum === "WGS84" || datum === "ETRS89" || datum === "RDN2008") {
+      return {lat, lon}; // treat as equivalent here
+    }
+
+    // assume input h=0
+    if (datum === "ED50") {
+      // EPSG:1133 uses Intl 1924 ellipsoid and translations -87 -98 -121 (geocentric translations)
+      const p = geodeticToECEF(lat, lon, 0, ELL.INTL1924);
+      const p2 = { x: p.x - 87, y: p.y - 98, z: p.z - 121 };
+      const g = ecefToGeodetic(p2.x, p2.y, p2.z, ELL.WGS84);
+      return { lat: g.latDeg, lon: g.lonDeg };
+    }
+
+    if (datum === "ROMA40") {
+      // Monte Mario -> WGS84 (4) EPSG:1660 (Position Vector 7-param)
+      const p = geodeticToECEF(lat, lon, 0, ELL.INTL1924);
+      const p2 = helmertPosVec(p, {
+        dx: -104.1, dy: -49.1, dz: -9.9,
+        rx: 0.971, ry: -2.917, rz: 0.714,
+        ds: -11.68
+      });
+      const g = ecefToGeodetic(p2.x, p2.y, p2.z, ELL.WGS84);
+      return { lat: g.latDeg, lon: g.lonDeg };
+    }
+
+    return {lat, lon};
+  }
+
+  // ---------- DISTANCE ----------
+  function haversineMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const φ1 = toRad(lat1), φ2 = toRad(lat2);
+    const dφ = toRad(lat2 - lat1);
+    const dλ = toRad(lon2 - lon1);
+    const a = Math.sin(dφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(dλ/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  $("btnDist").addEventListener("click", () => {
+    setErr("distErr");
+    $("distOut").textContent = "";
+
+    const datum = $("datum").value;
+
+    const aLat = num($("aLat").value), aLon = num($("aLon").value);
+    const bLat = num($("bLat").value), bLon = num($("bLon").value);
+
+    if ([aLat,aLon,bLat,bLon].some(v => !Number.isFinite(v))) {
+      setErr("distErr", "Inserisci 4 numeri validi (lat/lon in gradi decimali).");
+      return;
+    }
+    if (Math.abs(aLat)>90 || Math.abs(bLat)>90 || Math.abs(aLon)>180 || Math.abs(bLon)>180) {
+      setErr("distErr", "Range non valido: lat -90..90, lon -180..180.");
+      return;
+    }
+
+    const A = toWGS84(aLat, aLon, datum);
+    const B = toWGS84(bLat, bLon, datum);
+
+    const m = haversineMeters(A.lat, A.lon, B.lat, B.lon);
+    const cm = m * 100;
+
+    let note = "";
+    if (datum === "ROMA40") note = "Nota: Roma40→WGS84 approssimata (EPSG:1660).";
+    if (datum === "ED50") note = "Nota: ED50→WGS84 approssimata (EPSG:1133).";
+
+    $("distOut").textContent =
+      `Datum input: ${$("datum").selectedOptions[0].text}\n\n` +
+      `A (usato in WGS84): ${A.lat.toFixed(6)}, ${A.lon.toFixed(6)}\n` +
+      `B (usato in WGS84): ${B.lat.toFixed(6)}, ${B.lon.toFixed(6)}\n\n` +
+      `Distanza: ${m.toFixed(2)} m\n` +
+      `Distanza: ${cm.toFixed(2)} cm\n` +
+      (note ? `\n${note}` : "");
+  });
+
+  $("btnDistClear").addEventListener("click", () => {
+    ["aLat","aLon","bLat","bLon"].forEach(id => $(id).value = "");
+    $("distOut").textContent = "";
+    setErr("distErr");
+  });
+</script>
+
+</body>
+</html>
