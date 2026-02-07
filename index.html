@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Dragon Force Map Tool" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+  <title>Dragon Force Map Tool</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { margin: 0; color:#e5e7eb; min-height:100vh; background:#0b1020 url('Topografica.jpg') center/cover no-repeat fixed; position: relative; }
+    body::before { content:''; position: fixed; inset: 0; background: rgba(11,16,32,.78); pointer-events:none; z-index:0; }
+    header, main { position: relative; z-index: 1; }
+
+    header { padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.10); background: rgba(11,16,32,.94); backdrop-filter: blur(10px); text-align:center; }
+    h1 { margin: 6px 0 8px; font-size: 30px; font-weight: 950; letter-spacing: 1px; }
+    .sub { margin-top:6px; font-size:12px; color:#9ca3af; line-height: 1.35; text-align:center; }
+
+    main { padding: 14px 16px 28px; max-width: 720px; margin: 0 auto; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    button.tab { border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07); color:#e5e7eb; padding: 12px; border-radius: 14px; font-weight: 800; transition: transform .12s ease, background .18s ease, border-color .18s ease; }
+    button.tab.active { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.25); transform: translateY(-1px); }
+    button.tab:active { transform: scale(0.98); }
+
+    /* BOX GRANDE - contrasto aumentato */
+    .card {
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(8, 12, 24, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 14px 34px rgba(0,0,0,.45);
+    }
+
+    .stack { display: grid; gap: 10px; }
+    label { display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px; }
+    input, select {
+      width:100%; box-sizing:border-box;
+      padding: 12px 12px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.28); color:#e5e7eb; outline:none;
+    }
+    input::placeholder { color:#6b7280; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 4px; }
+    .btn { border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.12); color:#fff; padding: 11px 12px; border-radius: 14px; font-weight: 900; }
+    .btn.secondary { background: rgba(0,0,0,.25); }
+    .out { margin-top: 10px; padding: 12px; border-radius: 14px; background: rgba(0,0,0,.40); border: 1px dashed rgba(255,255,255,.18); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; white-space: pre-wrap; }
+    .small { font-size: 12px; color:#9ca3af; line-height: 1.35; }
+    .warn { font-size: 12px; color:#fbbf24; line-height: 1.35; }
+
+    .fadein { animation: fadeIn .18s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .footerLogo { text-align:center; margin-top: 22px; padding-bottom: 8px; }
+    .footerLogo img {
+      width: 280px;
+      max-width: 85%;
+      height: auto;
+      filter: drop-shadow(0 0 12px rgba(255, 215, 0, .22)) drop-shadow(0 0 24px rgba(255, 215, 0, .12));
+      opacity: .98;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Dragon Force Map Tool</h1>
+  <div class="sub">Inserisci la scala della mappa.</div>
+  <div class="tabs">
+    <button class="tab active" data-tab="scale">Scala</button>
+    <button class="tab" data-tab="distance">Distanza</button>
+  </div>
+</header>
+
+<main>
+  <section id="scale" class="card">
+    <div class="stack">
+      <div>
+        <label>Scala (1:n)</label>
+        <input id="scaleN" inputmode="numeric" placeholder="5000" />
+        <div class="small">Esempio: se sulla carta c’è scritto <span class="mono">1:5000</span> inserisci <span class="mono">5000</span></div>
+      </div>
+
+      <div>
+        <label>Unità di visualizzazione</label>
+        <select id="scaleUnit">
+          <option value="mm">mm</option>
+          <option value="cm" selected>cm</option>
+          <option value="m">m</option>
+          <option value="km">Km</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Misura sulla mappa (in cm)</label>
+        <input id="mapCm" inputmode="decimal" placeholder="12,5" />
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnScaleCalc">Calcola</button>
+        <button class="btn secondary" id="btnScaleClear">Pulisci</button>
+      </div>
+
+      <div class="out">
+        <div class="small">Output</div>
+        <div id="scaleOut" class="mono"></div>
+      </div>
+      <div id="scaleErr" class="warn"></div>
+    </div>
+  </section>
+
+  <section id="distance" class="card" style="display:none; margin-top:14px;">
+    <div class="stack">
+      <div>
+        <label>Datum / Sistema coordinate</label>
+        <select id="datum">
+          <option value="WGS84" selected>WGS84 (GPS) – EPSG:4326</option>
+          <option value="ROMA40">Roma1940 / Monte Mario (Roma40)</option>
+          <option value="ED50">ED50</option>
+          <option value="ETRS89">ETRS89</option>
+          <option value="RDN2008">RDN2008 / IGM95</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Punto A – Lat</label>
+        <input id="aLat" inputmode="decimal" placeholder="43.8812" />
+      </div>
+      <div>
+        <label>Punto A – Lon</label>
+        <input id="aLon" inputmode="decimal" placeholder="10.7729" />
+      </div>
+      <div>
+        <label>Punto B – Lat</label>
+        <input id="bLat" inputmode="decimal" placeholder="43.9000" />
+      </div>
+      <div>
+        <label>Punto B – Lon</label>
+        <input id="bLon" inputmode="decimal" placeholder="10.8000" />
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnDist">Calcola</button>
+        <button class="btn secondary" id="btnDistClear">Pulisci</button>
+      </div>
+
+      <div class="out">
+        <div class="small">Output</div>
+        <div id="distOut" class="mono"></div>
+      </div>
+      <div id="distErr" class="warn"></div>
+    </div>
+  </section>
+
+  <div class="footerLogo" aria-hidden="true">
+    <img src="logo.png" alt="Dragon Force" />
+  </div>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const tabs = document.querySelectorAll("button.tab");
+
+  function showPanel(idToShow) {
+    ["scale","distance"].forEach(id => {
+      const el = $(id);
+      if (id === idToShow) {
+        el.style.display = "block";
+        el.classList.remove("fadein");
+        void el.offsetWidth;
+        el.classList.add("fadein");
+      } else {
+        el.style.display = "none";
+      }
+    });
+  }
+
+  tabs.forEach(btn => btn.addEventListener("click", () => {
+    tabs.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    showPanel(btn.dataset.tab);
+  }));
+
+  const setErr = (id, msg="") => { $(id).textContent = msg; };
+  const num = (v) => {
+    if (typeof v !== "string") return NaN;
+    const x = v.trim().replace(",", ".");
+    return x === "" ? NaN : Number(x);
+  };
+  const fmt2 = (n) => Number(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function fromMetersToUnit(meters, unit) {
+    if (unit === "mm") return meters * 1000;
+    if (unit === "cm") return meters * 100;
+    if (unit === "m") return meters;
+    if (unit === "km") return meters / 1000;
+    return meters;
+  }
+
+  $("btnScaleCalc").addEventListener("click", () => {
+    setErr("scaleErr");
+    $("scaleOut").textContent = "";
+
+    const n = num($("scaleN").value);
+    const unit = $("scaleUnit").value;
+    const cmOnMap = num($("mapCm").value);
+
+    if (!Number.isFinite(n) || n <= 0) {
+      setErr("scaleErr", "Scala non valida.");
+      return;
+    }
+
+    const oneCm_real_m = n / 100;
+    const oneCm_real_km = n / 100000;
+    const oneKm_onMap_cm = 100000 / n;
+
+    let extra = "";
+    if (Number.isFinite(cmOnMap) && cmOnMap > 0) {
+      const real_m = (cmOnMap * n) / 100;
+      const real_km = real_m / 1000;
+      extra = `\n\nMisura sulla mappa: ${fmt2(cmOnMap)} cm\n• Distanza reale: ${fmt2(real_m)} m (${fmt2(real_km)} km)`;
+    }
+
+    $("scaleOut").textContent =
+      `Scala: 1:${Math.round(n)}\n\n` +
+      `• 1 cm sulla mappa = ${fmt2(oneCm_real_m)} m (${fmt2(oneCm_real_km)} km)\n` +
+      `• 1 km reale = ${fmt2(oneKm_onMap_cm)} cm sulla mappa` +
+      extra;
+  });
+
+  $("btnScaleClear").addEventListener("click", () => {
+    ["scaleN","mapCm"].forEach(id => $(id).value = "");
+    $("scaleOut").textContent = "";
+    setErr("scaleErr");
+  });
+
+  function haversineMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = (d) => d * Math.PI / 180;
+    const φ1 = toRad(lat1), φ2 = toRad(lat2);
+    const dφ = toRad(lat2 - lat1);
+    const dλ = toRad(lon2 - lon1);
+    const a = Math.sin(dφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(dλ/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  $("btnDist").addEventListener("click", () => {
+    setErr("distErr");
+    $("distOut").textContent = "";
+    const aLat = num($("aLat").value), aLon = num($("aLon").value);
+    const bLat = num($("bLat").value), bLon = num($("bLon").value);
+    if ([aLat,aLon,bLat,bLon].some(v => !Number.isFinite(v))) {
+      setErr("distErr", "Coordinate non valide.");
+      return;
+    }
+    const m = haversineMeters(aLat, aLon, bLat, bLon);
+    $("distOut").textContent = `Distanza: ${fmt2(m)} m (${fmt2(m*100)} cm)`;
+  });
+
+  $("btnDistClear").addEventListener("click", () => {
+    ["aLat","aLon","bLat","bLon"].forEach(id => $(id).value = "");
+    $("distOut").textContent = "";
+    setErr("distErr");
+  });
+</script>
+</body>
+</html>
